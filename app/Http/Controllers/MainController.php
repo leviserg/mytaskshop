@@ -68,32 +68,42 @@ class MainController extends Controller
 
     public function store(Request $request){
 
-/*
-        $this->validate($request, [
-            'product_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:640',
-        ]);
-*/
-        $fileName = '/images/art'.$request->curid.'.jpg';
-
         if ($request->hasFile('product_image')) {
+
+            $this->validate($request, [
+                'product_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:640',
+            ]);
+    
+            $fileName = '';
             $image = $request->file('product_image');
             $name = 'art'.$request->curid.'.'.$image->getClientOriginalExtension();
             $destinationPath = public_path('/images');
-            $fileName = 'images/'.$name;
+            $fileName = '/images/'.$name;
             $image->move($destinationPath, $name);
+
+            Product::where('id', '=', $request->curid)
+            ->update([
+                'pname'     => $request->productName,
+                'price'     => $request->productPrice,
+                'typeid'    => $request->producType,
+                'c1param'   => $request->productParam1,
+                'c2param'   => $request->productParam2,
+                'c3param'   => $request->productParam3,
+                'img' => $fileName
+            ]);
         }
-
-        Product::where('id', '=', $request->curid)
-        ->update([
-            'pname'     => $request->productName,
-            'price'     => $request->productPrice,
-            'typeid'    => $request->producType,
-            'c1param'   => $request->productParam1,
-            'c2param'   => $request->productParam2,
-            'c3param'   => $request->productParam3,
-            'img' => $fileName
-        ]);
-
+        else
+        {
+            Product::where('id', '=', $request->curid)
+            ->update([
+                'pname'     => $request->productName,
+                'price'     => $request->productPrice,
+                'typeid'    => $request->producType,
+                'c1param'   => $request->productParam1,
+                'c2param'   => $request->productParam2,
+                'c3param'   => $request->productParam3
+            ]);
+        }
         return redirect('/');
     }
 
@@ -144,32 +154,30 @@ class MainController extends Controller
 
     public function insert(Request $request){
 
-        /*
-                $this->validate($request, [
-                    'product_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:640',
-                ]);
-        */
-                $nextrec = Product::count();
-                $fileName = '/images/art'.$nextrec.'jpg';
-        
-                if ($request->hasFile('product_image')) {
-                    $image = $request->file('product_image');
-                    $name = 'art'.$nextrec.'.'.$image->getClientOriginalExtension();
-                    $destinationPath = public_path('/images');
-                    $fileName = 'images/'.$name;
-                    $image->move($destinationPath, $name);
-                }
-        
-                $newproduct = new \App\Product;
-                $newproduct->pname = $request->productName;
-                $newproduct->price = $request->productPrice;
-                $newproduct->typeid = $request->producType;
-                $newproduct->c1param = $request->productParam1;
-                $newproduct->c2param = $request->productParam2;
-                $newproduct->c3param = $request->productParam3;
-                $newproduct->img = $fileName;
-                $newproduct->save();
+        $newproduct = new \App\Product;
+        $newproduct->pname = $request->productName;
+        $newproduct->price = $request->productPrice;
+        $newproduct->typeid = $request->producType;
+        $newproduct->c1param = $request->productParam1;
+        $newproduct->c2param = $request->productParam2;
+        $newproduct->c3param = $request->productParam3;
 
-                return redirect('/');
-            }
+        if ($request->hasFile('product_image')) {
+            $nextrec = Product::count() + 1;
+            $fileName = '';
+            $this->validate($request, [
+                'product_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:640',
+            ]);
+            $image = $request->file('product_image');
+            $name = 'art'.$nextrec.'.'.$image->getClientOriginalExtension();
+            $destinationPath = public_path('/images');
+            $fileName = '/images/'.$name;
+            $image->move($destinationPath, $name);
+            $newproduct->img = $fileName;
+        }
+
+        $newproduct->save();
+
+        return redirect('/');
+    }
 }
